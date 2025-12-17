@@ -1,5 +1,6 @@
 package com.project.letmenotify.service.impl;
 
+import com.project.letmenotify.ai.AIEnhancer;
 import com.project.letmenotify.dto.NotificationRequest;
 import com.project.letmenotify.dto.NotificationResponse;
 import com.project.letmenotify.model.NotificationLog;
@@ -15,15 +16,18 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRuleEngine ruleEngine;
     private final TemplateService templateService;
     private final NotificationLogRepository logRepository;
+    private final AIEnhancer aiEnhancer;
 
     public NotificationServiceImpl(
             NotificationRuleEngine ruleEngine,
             TemplateService templateService,
-            NotificationLogRepository logRepository) {
+            NotificationLogRepository logRepository,
+            AIEnhancer aiEnhancer) {
 
         this.ruleEngine = ruleEngine;
         this.templateService = templateService;
         this.logRepository = logRepository;
+        this.aiEnhancer = aiEnhancer;
     }
 
     @Override
@@ -40,17 +44,29 @@ public class NotificationServiceImpl implements NotificationService {
                 request.getContext()
         );
 
-        // 3. Persist log
+        // 3. Render enhanced content
+        String enhancedContent = content;
+
+        if ("HIGH".equals(priority)) {
+            enhancedContent = aiEnhancer.enhance(
+                    content,
+                    "FRIENDLY",
+                    priority,
+                    channel
+            );
+        }
+
+        // 4. Persist log
         NotificationLog log = new NotificationLog();
         log.setUserId(request.getUserId());
         log.setEventType(request.getEventType());
         log.setChannel(channel);
         log.setPriority(priority);
-        log.setFinalContent(content);
+        log.setFinalContent(enhancedContent);
 
         logRepository.save(log);
 
-        // 4. Return response
-        return new NotificationResponse(channel, priority, content);
+        // 5. Return response
+        return new NotificationResponse(channel, priority, enhancedContent);
     }
 }
