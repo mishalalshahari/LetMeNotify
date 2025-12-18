@@ -5,6 +5,7 @@ import com.project.letmenotify.dto.OpenAIResponse;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -36,11 +37,15 @@ public class OpenAIEnhancer implements AIEnhancer {
     }
 
     @Override
+    @Cacheable(
+            value = "ai-enhancements",
+            key = "#baseText + ':' + #tone + ':' + #priority + ':' + #channel"
+    )
     @RateLimiter(name = "openai", fallbackMethod = "rateLimitFallback")
     @Retry(name = "openai", fallbackMethod = "retryFallback")
     public String enhance(String baseText, String tone, String priority, String channel) {
 
-        System.out.println(">>> AI Enhancer invoked");
+        System.out.println(">>> AI Enhancer invoked (CACHE MISS)");
 
         if (!aiEnabled) {
             System.out.println(">>> AI disabled");
