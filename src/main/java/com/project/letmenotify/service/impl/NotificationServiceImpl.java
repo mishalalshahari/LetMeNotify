@@ -45,16 +45,21 @@ public class NotificationServiceImpl implements NotificationService {
         );
 
         // 3. Render enhanced content
-        String enhancedContent = content;
+        String enhancedContent = aiEnhancer.enhance(
+                content,
+                "FRIENDLY",
+                priority,
+                channel
+        );
 
-        if ("HIGH".equals(priority)) {
-            enhancedContent = aiEnhancer.enhance(
-                    content,
-                    "FRIENDLY",
-                    priority,
-                    channel
-            );
-        }
+//        if ("HIGH".equals(priority)) {
+//            enhancedContent = aiEnhancer.enhance(
+//                    content,
+//                    "FRIENDLY",
+//                    priority,
+//                    channel
+//            );
+//        }
 
         // 4. Persist log
         NotificationLog log = new NotificationLog();

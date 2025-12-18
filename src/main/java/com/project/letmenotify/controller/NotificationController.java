@@ -20,8 +20,7 @@ public class NotificationController {
     }
 
     @PostMapping
-    public NotificationResponse createNotification(
-            @Valid @RequestBody NotificationRequest request) {
+    public NotificationResponse createNotification(@Valid @RequestBody NotificationRequest request) {
 
         return service.process(request);
     }
