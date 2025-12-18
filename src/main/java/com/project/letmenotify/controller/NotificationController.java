@@ -2,8 +2,11 @@ package com.project.letmenotify.controller;
 
 import com.project.letmenotify.dto.NotificationRequest;
 import com.project.letmenotify.dto.NotificationResponse;
+import com.project.letmenotify.event.NotificationEvent;
 import com.project.letmenotify.service.NotificationService;
 import jakarta.validation.Valid;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,15 +16,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-    private final NotificationService service;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public NotificationController(NotificationService service) {
-        this.service = service;
+    public NotificationController(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
     @PostMapping
-    public NotificationResponse createNotification(@Valid @RequestBody NotificationRequest request) {
+    public ResponseEntity<String> createNotification(
+            @Valid @RequestBody NotificationRequest request
+    ) {
+        // Publish async event
+        eventPublisher.publishEvent(new NotificationEvent(request));
 
-        return service.process(request);
+        // Return immediately (non-blocking)
+        return ResponseEntity
+                .accepted()
+                .body("Notification accepted for async processing");
     }
 }
